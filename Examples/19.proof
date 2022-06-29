@@ -1,0 +1,29 @@
+0
+
+
+showFixedPoint
+
+
+
+showFixedPoint
+
+Circle(O,A,B,C)
+Circle(P,A,B,F)
+Circle(P,A,E,NWPNT1)
+Coll(E,A,C)
+Circle(O,B,D,NWPNT2)
+Coll(D,B,F)
+Coll(E,C,A)
+Coll(A,E,C)
+Coll(D,F,B)
+Coll(B,D,F)
+Coll(C,E,A)
+Coll(A,C,E)
+Coll(F,D,B)
+Coll(B,F,D)
+Coll(C,A,E)
+Coll(F,B,D)
+
+Not Proved
+Time spent: 0.015271
+

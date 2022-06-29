@@ -1,0 +1,187 @@
+
+1) Adicionar novas regras ao scanner/parser
+
+===//===
+scanner.ll --- flex --- adicionar o reconhecimento de novas palavras
+===//===
+
+é necessário acrecentar uma regra à secção
+
+"coll"     return yy::parser::make_COLLINEAR (loc);
+"para"     return yy::parser::make_PARALLEL (loc);
+"perp"     return yy::parser::make_PERPENDICULAR (loc);
+
+-- por exemplo, o acrescentar de «midp»
+
+"midp"     return yy::parser::make_MIDPOINT (loc);
+
+como o flex e o bison trabalham em parceria, isto basta, o resto será
+feito no parser
+
+===//===
+parser.yy  --- bison --- adicionar o reconhecimento de novas frases
+===//===
+
+Passa pelo aceitar de novas palavras (se as há) e do reconhecer de
+novas frases caso seja necessário.
+
+-- continuando o exemplo do acrescentar de «midp»
+
+novo «token» (novas palavras reconhecidas pelo «scanner») (linha 52)
+
+  PARALLEL "para"	
+  PERPENDICULAR "perp"
+
+adicionar
+  MIDPOINT "midp"	
+
+Nova opção para «geocmd», linha 97
+
+
+  | midpoint { };
+
+
+Novas frases, referente ao «midp(M, A, B)», isto é algo como «midp(M,A,B)»
+(l.123) 
+
+midpoint:
+  "midp" "(" "identifier" "," "identifier" "," "identifier" ")"
+  { drv.typeGeoCmd[drv.numGeoCmd]="midp";
+    drv.point1[drv.numGeoCmd]=$3;
+    drv.point2[drv.numGeoCmd]=$5;
+    drv.point3[drv.numGeoCmd]=$7;
+  };
+
+é de notar que o «drv.numGeoCmd» é incrementado sempre que um novo
+«geocmd» é acrescentado, logo «midpoint» será o caso 4
+
+2) database to RAM (dbRAM.cpp)
+
+criar um nova tabela para o novo comando (l.44)
+
+  createTableMidpoint = "CREATE TABLE IF NOT EXISTS 'midpoint' ('typeGeoCmd' TEXT NOT NULL,'point1' TEXT,'point2' TEXT,'point3' TEXT,'newFact' INTEGER,'oldFact' INTEGER,FOREIGN KEY('oldFact') REFERENCES 'Facts'('id'),PRIMARY KEY('point1','point2','point3'),FOREIGN KEY('newFact') REFERENCES 'NewFact'('id') ON DELETE SET NULL)";
+
+
+3) FOF to Database (foftodb.{hpp,cpp})
+
+===//===
+foftodb.cpp
+===//===
+
+acrescentar um caso a readFileLoadDB
+
+o «switch» na linha 60
+
+
+      case 4: // Midpoint
+	break;
+
+... falta ainda completar os casos «Parallel» e «Perpendicular»
+
+é o acrescentar de um regra «INSERT INTO», 
+
+4) Provador
+
+4.1) adicionar regra(s) de inferência
+
+===//===
+prover.hpp
+===//===
+
+--- algo como (prover.hpp, l.95)
+
+/*	      
+ *  GDDM rule D10 --- para(A,B,C,D) and perp(C,D,E,F) => perp(A,B,E,F)
+ * --- insert perp(A,B,E,F)
+ */
+DBinMemory ruleD10(DBinMemory,std::string,std::string,std::string,std::string);
+
+===//===
+prover.cpp
+===//===
+
+ acrescentar o código ruleD10
+
+É sempre o primeiro elemento do antecendente que faz o invocar da
+regra, como tal os pontos referentes a esse facto são dados (argumentos)
+
+Por exemplo, «ruleD1» --- rule coll(A,B,C) => coll(A,C,B)
+
+--> coll (está subjacente à regra em questão)
+<-- "INSERT INTO NewFact(typeGeoCmd) VALUES ('coll')"
+--> point1, point2, point3
+<-- neste caso não falta mais nenhuma informação, é só trocar a ordem dos pontos
+<-- "INSERT INTO Collinear(typeGeoCmd,point1,point2,point3,newFact) VALUES ('coll','"+point1+"','"+point3+"','"+point2+"','"+lstInsRwId+"')";
+
+
+Outro exemplo, «ruleD3» ---  coll(A,B,C) and coll(A,B,D) => coll(C,D,A)
+
+--> coll (está subjacente à regra em questão
+<--Id = "INSERT INTO NewFact(typeGeoCmd) VALUES ('coll')"
+--> point1, point2, point3, ou seja, o 'A', 'B' e 'C', falta o 'D' que está
+    em «coll(A,B,D)», para o obter faz-se uma pesquisa nos «oldFact»,
+    assim como nos «newFact»
+<-- Se foi possível obter o ponto em falta, "INSERT INTO Collinear(typeGeoCmd,point1,point2,point3,newFact) VALUES ('coll','"+point3+"','"+newPoint3+"','"+point1+"','"+lstInsRwId+"')";
+
+A regra «rule42»
+
+% Note: D42 collinear 4 points, instead of three 
+%       coll(P,Q,A,B) <==> coll(P,Q,A) & coll(P,Q,B)
+%       ~coll(P,Q,A,B) <==> (~col(P,Q,A) | ~coll(P,Q,B))
+%      Split in two rules D42a, D42b
+
+fof(ruleD42a,axiom,
+    ( ! [A,B,P,Q] : ((eqangle(P,A,P,B,Q,A,Q,B)
+                      & ~ coll(P,Q,A))
+                     => cyclic(A,B,P,Q)) )).
+fof(ruleD42b,axiom,
+    ( ! [A,B,P,Q] : ((eqangle(P,A,P,B,Q,A,Q,B)
+                      & ~ coll(P,Q,B))
+                     => cyclic(A,B,P,Q)) )).
+
+Regras com negação, por exemplo «ruleD47»
+
+... bem terá de ser uma «query» diferente do tipo «not in»... ainda a verificar como se deverá proceder
+
+ As regras ruleD5--ruleD10 ainda estão por implementar
+
+4.2) acrescentar um caso a fixedPoint
+
+switch, l.329
+
+    case 3: // Perpendicular
+      break;
+    case 4: // Midpoint
+      break;
+
+ainda por implementar
+
+4.3) acrescentar um caso a proved
+
+switch, l.489
+
+  case 2: // para
+    return false;
+    break;
+  case 3: // perp
+    return false;
+    break;
+  case 4: // midpoint
+    return false;
+    break;
+
+ainda por implementar
+
+4.4) acrescentar um caso a showFixedPoint
+
+switch, l.535
+
+    case 2:  // para
+      break;
+    case 3:  // perp
+      break;
+    case 4:  // midpoint
+      break;
+
+ainda por implementar
+

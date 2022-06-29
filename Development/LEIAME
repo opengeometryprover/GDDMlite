@@ -1,0 +1,16 @@
+Tentar uma primeira aproximação ao método de bases de dados deductivas
+
+implementar uma base de dados e tentar uma primeira aproximação
+«naive» ao método.
+
+collNewFacts(pt1,pt2,pt3)
+
+collFacts(pt1,pt2,pt3)
+
+
+dump database
+sqlite3 gddmetodozinho.db .dump > gddmetodozinho.dump
+
+restore database
+rm gddmetodozinho.db
+sqlite3 gddmetodozinho.db < gddmetodozinho_vazia.dump

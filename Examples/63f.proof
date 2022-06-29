@@ -1,0 +1,22 @@
+0
+
+
+showFixedPoint
+
+
+
+showFixedPoint
+
+Coll(D,B,C)
+Circle(E,A,D,C)
+Circle(F,A,D,B)
+Circle(G,B,A,C)
+Coll(D,C,B)
+Coll(B,D,C)
+Coll(C,D,B)
+Coll(B,C,D)
+Coll(C,B,D)
+
+Not Proved
+Time spent: 0.009009
+

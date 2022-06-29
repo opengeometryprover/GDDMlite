@@ -1,0 +1,30 @@
+0
+
+
+showFixedPoint
+
+
+
+showFixedPoint
+
+Circle(O,A,B,C)
+Perp(A,C,B,D)
+Circle(O,A,D,NWPNT1)
+Circle(O,D,E,NWPNT2)
+Coll(E,D,O)
+Coll(E,O,D)
+Coll(D,E,O)
+Coll(O,E,D)
+Coll(D,O,E)
+Coll(O,D,E)
+Perp(A,C,D,B)
+Perp(B,D,A,C)
+Perp(D,B,A,C)
+Perp(B,D,C,A)
+Perp(D,B,C,A)
+Perp(C,A,B,D)
+Perp(C,A,D,B)
+
+Not Proved
+Time spent: 0.015822
+
